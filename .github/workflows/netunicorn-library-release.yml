@@ -4,6 +4,8 @@ name: Release netunicorn-library
 
 on:
   push:
+    paths:
+      - "pyproject.toml"
     branches: ["main"]
   workflow_dispatch:
 
@@ -15,19 +17,20 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       local_version_is_higher: ${{ steps.check-pypi-version.outputs.local_version_is_higher }}
+      local_version: ${{ steps.check-pypi-version.outputs.local_version }}
 
     steps:
       - uses: actions/checkout@v3
       - name: Check if local version newer than PyPI version
         id: check-pypi-version
-        uses: maybe-hello-world/pyproject-check-version@v1
-        with:
-          pyproject-path: "."
+        uses: maybe-hello-world/pyproject-check-version@9f6ef3c
 
 
   deploy:
     runs-on: ubuntu-latest
     environment: production
+    permissions:
+      contents: write
     needs: check-version
     if: ${{ needs.check-version.outputs.local_version_is_higher == 'true' }}
 
@@ -61,3 +64,14 @@ jobs:
         user: __token__
         password: ${{ secrets.PYPI_API_TOKEN }}
         packages_dir: "temp/netunicorn/netunicorn-library/dist"
+    - name: push tag
+      uses: anothrNick/github-tag-action@1.61.0
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CUSTOM_TAG: ${{ needs.check-version.outputs.local_version }}
+    - name: GH Release
+      uses: softprops/action-gh-release@v0.1.15
+      with:
+        tag_name: ${{ needs.check-version.outputs.local_version }}
+        generate_release_notes: true
+
