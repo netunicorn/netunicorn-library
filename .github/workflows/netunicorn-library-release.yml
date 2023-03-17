@@ -23,7 +23,7 @@ jobs:
       - uses: actions/checkout@v3
       - name: Check if local version newer than PyPI version
         id: check-pypi-version
-        uses: maybe-hello-world/pyproject-check-version@9f6ef3c
+        uses: maybe-hello-world/pyproject-check-version@v2
 
 
   deploy:
