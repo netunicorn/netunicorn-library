@@ -16,11 +16,11 @@ from netunicorn.library.pipelines import PipelineName
 ```
 
 ## Contributions
-This repository is freely open to contributions. Please, submit pull requests to the `develop` branch.
-Periodically, the `develop` branch is merged into `master` and a new version is released as a Python package.
+This repository is freely open to contributions. Please, submit pull requests directly to the 'main' branch.
+Periodically, we will update the package version and create a library release.
 
 ## Maintenance
 Please note, that as this repository is contribution-based (so, any user can introduce new tasks and pipelines), 
 we do not guarantee that all the tasks and pipelines are working properly or are up-to-date.
 
-You can include your contact information in tasks and pipelines files, so that users can contact you in case of any issues.
+You can include your contact information in tasks and pipelines files, so that users can contact you in case of any issues or updates.
