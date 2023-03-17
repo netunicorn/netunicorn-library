@@ -4,6 +4,8 @@ name: Release netunicorn-library
 
 on:
   push:
+    paths:
+      - "pyproject.toml"
     branches: ["main"]
   workflow_dispatch:
 
