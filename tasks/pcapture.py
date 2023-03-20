@@ -78,10 +78,7 @@ class StopNamedCaptureLinuxImplementation(Task):
             return pid
 
         pid = pid.unwrap()
-        subprocess.Popen(
-            ["kill", "-w", str(pid)], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        return "Successfully killed tcpdump process"
+        return subprocess.check_output(["kill", str(pid)])
 
 
 class StopAllTCPDumps(TaskDispatcher):
