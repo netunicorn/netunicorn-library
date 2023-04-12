@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import Literal, Optional
 
 from netunicorn.base import Task
 from netunicorn.base.types import FlagValues
@@ -40,8 +40,49 @@ class GetFlagTask(Task):
 
         result = req.get(
             f"{gateway}/api/v1/experiment/{experiment_id}/flag/{self.flag_name}"
-        ).json()
-        return FlagValues(**result)
+        )
+        result.raise_for_status()
+        return FlagValues(**result.json())
+
+
+class WaitForExactFlagResultTask(Task):
+    def __init__(
+            self,
+            flag_name: str,
+            values: FlagValues,
+            sleep_time: float = 1,
+            attempts: Optional[int] = None,
+            *args, **kwargs
+    ):
+        self.flag_name = flag_name
+        self.sleep_time = sleep_time
+        self.attempts = attempts
+        self.values = values
+        super().__init__(*args, **kwargs)
+
+    def run(self) -> FlagValues:
+        import requests as req
+        import os
+        import time
+
+        gateway = os.environ["NETUNICORN_GATEWAY_ENDPOINT"]
+        experiment_id = os.environ["NETUNICORN_EXPERIMENT_ID"]
+
+        result = None
+        counter = 0
+        while result != self.values:
+            result = req.get(
+                f"{gateway}/api/v1/experiment/{experiment_id}/flag/{self.flag_name}"
+            )
+            result.raise_for_status()
+            result = FlagValues(**result.json())
+
+            counter += 1
+            if self.attempts is not None and counter >= self.attempts:
+                raise TimeoutError("Timeout while waiting for flag to be set")
+            time.sleep(self.sleep_time)
+
+        return result
 
 
 class _AtomicOperationFlagTask(Task):
