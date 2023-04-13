@@ -1,7 +1,20 @@
 from typing import Literal, Optional
+import warnings
+from urllib.parse import quote_plus
 
 from netunicorn.base import Task
 from netunicorn.base.types import FlagValues
+
+
+def quote_plus_and_warn(string: str) -> str:
+    result = quote_plus(string)
+    if result != string:
+        warnings.warn(
+            f"String {string} was encoded to {result}. "
+            f"Consider using only alphanumeric characters and underscores."
+        )
+
+    return result
 
 
 class SetFlagTask(Task):
@@ -9,7 +22,7 @@ class SetFlagTask(Task):
         if flag_values.int_value is None and flag_values.text_value is None:
             raise ValueError("Either int_value or text_value must be set")
 
-        self.flag_name = flag_name
+        self.flag_name = quote_plus_and_warn(flag_name)
         self.flag_values = flag_values
         super().__init__(*args, **kwargs)
 
@@ -28,7 +41,7 @@ class SetFlagTask(Task):
 
 class GetFlagTask(Task):
     def __init__(self, flag_name: str, *args, **kwargs):
-        self.flag_name = flag_name
+        self.flag_name = quote_plus_and_warn(flag_name)
         super().__init__(*args, **kwargs)
 
     def run(self) -> FlagValues:
@@ -54,7 +67,7 @@ class WaitForExactFlagResultTask(Task):
             attempts: Optional[int] = None,
             *args, **kwargs
     ):
-        self.flag_name = flag_name
+        self.flag_name = quote_plus_and_warn(flag_name)
         self.sleep_time = sleep_time
         self.attempts = attempts
         self.values = values
@@ -87,7 +100,7 @@ class WaitForExactFlagResultTask(Task):
 
 class _AtomicOperationFlagTask(Task):
     def __init__(self, flag_name: str, operation: Literal['increment', 'decrement'], *args, **kwargs):
-        self.flag_name = flag_name
+        self.flag_name = quote_plus_and_warn(flag_name)
         self.operation = operation
         super().__init__(*args, **kwargs)
 
