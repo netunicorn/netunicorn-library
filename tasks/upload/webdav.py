@@ -14,6 +14,8 @@ class UploadToWebDav(TaskDispatcher):
         username: Optional[str] = None,
         password: Optional[str] = None,
         authentication: Literal["basic"] = "basic",
+        *args,
+        **kwargs
     ):
         if endpoint[-1] == "/":
             endpoint = endpoint[:-1]
@@ -23,7 +25,7 @@ class UploadToWebDav(TaskDispatcher):
         self.password = password
         self.authentication = authentication
 
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
         result = UploadToWebDavImplementation(
@@ -32,6 +34,7 @@ class UploadToWebDav(TaskDispatcher):
             self.username,
             self.password,
             self.authentication,
+            name=self.name,
         )
 
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
@@ -51,13 +54,15 @@ class UploadToWebDavImplementation(Task):
         username: Optional[str] = None,
         password: Optional[str] = None,
         authentication: Literal["basic"] = "basic",
+        *args,
+        **kwargs
     ):
         self.filepaths = filepaths
         self.endpoint = endpoint
         self.username = username
         self.password = password
         self.authentication = authentication
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         executor_id = os.environ.get("NETUNICORN_EXECUTOR_ID") or "Unknown"

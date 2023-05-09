@@ -95,14 +95,14 @@ def watch(
 
 
 class WatchYouTubeVideo(TaskDispatcher):
-    def __init__(self, video_url: str, duration: Optional[int] = None):
+    def __init__(self, video_url: str, duration: Optional[int] = None, *args, **kwargs):
         self.video_url = video_url
         self.duration = duration
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
         if node.properties.get("os_family", "").lower() == "linux":
-            return WatchYouTubeVideoLinuxImplementation(self.video_url, self.duration)
+            return WatchYouTubeVideoLinuxImplementation(self.video_url, self.duration, name=self.name)
 
         raise NotImplementedError(
             f'WatchYouTubeVideo is not implemented for {node.properties.get("os_family", "")}'
@@ -123,13 +123,15 @@ class WatchYouTubeVideoLinuxImplementation(Task):
         video_url: str,
         duration: Optional[int] = None,
         chrome_location: Optional[str] = None,
+        *args,
+        **kwargs,
     ):
         self.video_url = video_url
         self.duration = duration
         self.chrome_location = chrome_location
         if not self.chrome_location:
             self.chrome_location = "/usr/bin/chromium-browser"
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         return watch(self.video_url, self.duration, self.chrome_location)

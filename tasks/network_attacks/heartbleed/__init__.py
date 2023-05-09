@@ -20,6 +20,8 @@ class Heartbleed(Task):
         count: int = 1,
         sleep_seconds: int = 0,
         tls_version: TLSVersion = TLSVersion.TLS_1_0,
+        *args,
+        **kwargs
     ):
         self.host = dst_host
         self.port = dst_port
@@ -27,7 +29,7 @@ class Heartbleed(Task):
         self.count = count
         self.sleep_seconds = sleep_seconds
         self.tls_version = int(tls_version.value)
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         connection = connect(self.host, self.port, src_port=self.src_port)

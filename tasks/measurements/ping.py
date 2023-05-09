@@ -29,10 +29,10 @@ class PingResult:
 
 
 class Ping(TaskDispatcher):
-    def __init__(self, address: str, count: int = 1):
+    def __init__(self, address: str, count: int = 1, *args, **kwargs):
         self.address = address
         self.count = count
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
         if node.properties.get("os_family", "").lower() == "linux":
@@ -45,10 +45,10 @@ class Ping(TaskDispatcher):
 class PingLinuxImplementation(Task):
     requirements = ["sudo apt-get install -y inetutils-ping"]
 
-    def __init__(self, address: str, count: int = 1):
-        super().__init__()
+    def __init__(self, address: str, count: int = 1, *args, **kwargs):
         self.address = address.strip()
         self.count = count
+        super().__init__(*args, **kwargs)
 
     def run(self):
         result = subprocess.run(

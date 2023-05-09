@@ -10,9 +10,9 @@ class DummyTask(Task):
 
 
 class SleepTask(Task):
-    def __init__(self, seconds: int):
+    def __init__(self, seconds: int, *args, **kwargs):
         self.seconds = seconds
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         time.sleep(self.seconds)
@@ -20,9 +20,9 @@ class SleepTask(Task):
 
 
 class ShellCommand(Task):
-    def __init__(self, command: str):
+    def __init__(self, command: str, *args, **kwargs):
         self.command = command
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         return subprocess.check_output(self.command, shell=True)

@@ -12,6 +12,8 @@ class FakeMail(Task):
         recipient: str,
         subject: str,
         body: str,
+        *args,
+        **kwargs
     ):
         self.host = host
         self.port = port
@@ -19,7 +21,7 @@ class FakeMail(Task):
         self.recipient = recipient
         self.subject = subject
         self.body = body
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         return send_mail(
