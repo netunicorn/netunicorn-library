@@ -8,7 +8,7 @@ import time
 from typing import Optional
 from enum import IntEnum
 
-from netunicorn.base.task import Result, Failure, Success, Task, TaskDispatcher
+from netunicorn.base import Result, Failure, Success, Task, TaskDispatcher
 from netunicorn.base.nodes import Node
 
 from selenium import webdriver

@@ -7,7 +7,7 @@ import subprocess
 import time
 from typing import Optional
 
-from netunicorn.base.task import Result, Success, Task, TaskDispatcher
+from netunicorn.base import Result, Success, Task, TaskDispatcher
 from netunicorn.base.nodes import Node
 
 from selenium import webdriver

@@ -43,6 +43,7 @@ def find_closest(options: List[int], goal: int) -> int:
     if not sorted_options:
         raise Exception("Youtube parsing error: quality menu block is empty")
 
+    opt = 0
     for ind, opt in enumerate(sorted_options):
         if opt >= goal:
             if ind > 0 and (goal - sorted_options[ind - 1] < opt - goal):

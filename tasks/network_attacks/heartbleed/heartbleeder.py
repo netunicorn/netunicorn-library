@@ -283,7 +283,7 @@ def _build_heartbeat(tls_ver: int = 0x01) -> List[int]:
 def _hexdump(payload: bytes) -> str:
     pdat = ""
     for b in range(0, len(payload), 16):
-        lin = [c for c in payload[b : b + 16]]
+        lin = [c for c in payload[b: b + 16]]
         pdat += "".join(
             (chr(c) if ((32 <= c <= 126) or (c == 10) or (c == 13)) else ".")
             for c in lin
