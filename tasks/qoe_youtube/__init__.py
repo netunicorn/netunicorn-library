@@ -4,27 +4,28 @@ import time
 from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
+from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
-from netunicorn.base.task import Failure, Success, Task, TaskDispatcher
+from netunicorn.base import Failure, Success, Task, TaskDispatcher, is_successful
 
 
 class StartQoECollectionServer(TaskDispatcher):
     def __init__(
-        self, data_folder: str = ".", interface: str = "0.0.0.0", port: int = 34543
+        self, data_folder: str = ".", interface: str = "0.0.0.0", port: int = 34543, *args, **kwargs,
     ):
         self.data_folder = data_folder
         self.interface = interface
         self.port = port
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return StartQoECollectionServerLinuxImplementation(
-                self.data_folder, self.interface, self.port
+                self.data_folder, self.interface, self.port, name=self.name
             )
 
         raise NotImplementedError(
-            f'StartQoECollectionServer is not implemented for {node.properties.get("os_family", "")}'
+            f'StartQoECollectionServer is not implemented for {node.architecture}'
         )
 
 
@@ -36,12 +37,12 @@ class StartQoECollectionServerLinuxImplementation(Task):
     ]
 
     def __init__(
-        self, data_folder: str = ".", interface: str = "0.0.0.0", port: int = 34543
+        self, data_folder: str = ".", interface: str = "0.0.0.0", port: int = 34543, *args, **kwargs,
     ):
         self.data_folder = data_folder
         self.interface = interface
         self.port = port
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
         env = os.environ.copy()
@@ -50,7 +51,7 @@ class StartQoECollectionServerLinuxImplementation(Task):
         process = subprocess.Popen(
             [
                 "uvicorn",
-                "netunicorn.library.qoe_youtube.qoe_collector:app",
+                "netunicorn.library.tasks.qoe_youtube.qoe_collector:app",
                 "--host",
                 self.interface,
                 "--port",
@@ -75,31 +76,32 @@ class StartQoECollectionServerLinuxImplementation(Task):
 
 
 class StopQoECollectionServer(TaskDispatcher):
+    def __init__(self, start_task_name: str, *args, **kwargs):
+        self.start_task_name = start_task_name
+        super().__init__(*args, **kwargs)
+
     def dispatch(self, node: Node) -> Task:
         if node.properties.get("os_family", "").lower() == "linux":
-            return StopQoECollectionServerLinuxImplementation()
+            return StopQoECollectionServerLinuxImplementation(start_task_name=self.start_task_name, name=self.name)
 
         raise NotImplementedError(
-            f'StopQoECollectionServer is not implemented for {node.properties.get("os_family", "")}'
+            f'StopQoECollectionServer is not implemented for {node.architecture}'
         )
 
 
 class StopQoECollectionServerLinuxImplementation(Task):
+    def __init__(self, start_task_name: str, *args, **kwargs):
+        self.start_task_name = start_task_name
+        super().__init__(*args, **kwargs)
+
     def run(self):
         # look for the process ID of the QoE collection server and use it to kill the server
-        for element in self.previous_steps:
-            if isinstance(element, Success):
-                element = [element]
-            for result in element:
-                if isinstance(y := result.unwrap(), tuple) and str(y[0]).startswith(
-                    "QoE collection server started"
-                ):
-                    process_id = y[1]
-                    subprocess.run(["kill", str(process_id)])
-                    return Success(
-                        f"QoE collection server stopped with process ID: {process_id}"
-                    )
-        return Failure("QoE collection server not found")
+        result = self.previous_steps.get(self.start_task_name, [Failure("QoE collection server not found")])[-1]
+        if is_successful(result):
+            process_id = result.unwrap()[1]
+            return subprocess.check_output(f"kill {process_id}", shell=True)
+
+        return result
 
 
 class WatchYouTubeVideo(TaskDispatcher):
@@ -111,6 +113,8 @@ class WatchYouTubeVideo(TaskDispatcher):
         qoe_server_address: str = "localhost",
         qoe_server_port: int = 34543,
         report_time: int = 250,
+        *args,
+        **kwargs,
     ):
         self.video_url = video_url
         self.duration = duration
@@ -118,10 +122,10 @@ class WatchYouTubeVideo(TaskDispatcher):
         self.qoe_server_address = qoe_server_address
         self.qoe_server_port = qoe_server_port
         self.report_time = report_time
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return WatchYouTubeVideoLinuxImplementation(
                 self.video_url,
                 self.duration,
@@ -129,6 +133,7 @@ class WatchYouTubeVideo(TaskDispatcher):
                 self.qoe_server_address,
                 self.qoe_server_port,
                 self.report_time,
+                name=self.name,
             )
 
         raise NotImplementedError(
@@ -158,6 +163,8 @@ class WatchYouTubeVideoLinuxImplementation(Task):
         qoe_server_address: str = "localhost",
         qoe_server_port: int = 34543,
         report_time: int = 250,
+        *args,
+        **kwargs,
     ):
         self.video_url = video_url
         self.duration = duration
@@ -165,10 +172,10 @@ class WatchYouTubeVideoLinuxImplementation(Task):
         self.qoe_server_address = qoe_server_address
         self.qoe_server_port = qoe_server_port
         self.report_time = report_time
-        super().__init__()
+        super().__init__(*args, **kwargs)
 
     def run(self):
-        from netunicorn.library.qoe_youtube import qoe_collector, watcher
+        from netunicorn.library.tasks.qoe_youtube import watcher
 
         adblock_crx_path = os.path.join(".", "extensions", "4.46.2_0.crx")
         qoe_extension_path = os.path.join(".", "extensions", "qoe_extension")
