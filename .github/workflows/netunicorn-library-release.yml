@@ -62,7 +62,7 @@ jobs:
     - name: Publish package
       uses: pypa/gh-action-pypi-publish@release/v1
       with:
-        packages_dir: "temp/netunicorn/netunicorn-library/dist"
+        packages-dir: "temp/netunicorn/netunicorn-library/dist"
     - name: push tag
       uses: anothrNick/github-tag-action@1.61.0
       env:
