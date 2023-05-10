@@ -87,8 +87,14 @@ class WaitForExactFlagResultTask(Task):
             result = req.get(
                 f"{gateway}/api/v1/experiment/{experiment_id}/flag/{self.flag_name}"
             )
-            result.raise_for_status()
-            result = FlagValues(**result.json())
+            if result.status_code == 200:
+                result = result.json()
+                if result and FlagValues(**result) == self.values:
+                    break
+
+            # 404 is a normal result -- flag has not been set yet
+            if result.status_code != 404:
+                result.raise_for_status()
 
             counter += 1
             if self.attempts is not None and counter >= self.attempts:
