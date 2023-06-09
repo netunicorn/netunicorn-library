@@ -81,7 +81,7 @@ class StopQoECollectionServer(TaskDispatcher):
         super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return StopQoECollectionServerLinuxImplementation(start_task_name=self.start_task_name, name=self.name)
 
         raise NotImplementedError(
@@ -137,7 +137,7 @@ class WatchYouTubeVideo(TaskDispatcher):
             )
 
         raise NotImplementedError(
-            f'WatchYouTubeVideo is not implemented for {node.properties.get("os_family", "")}'
+            f'WatchYouTubeVideo is not implemented for architecture: {node.architecture}'
         )
 
 

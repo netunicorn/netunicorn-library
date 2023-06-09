@@ -2,6 +2,7 @@ import subprocess
 from dataclasses import dataclass
 from typing import List
 
+from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
 from netunicorn.base.task import Failure, Task, TaskDispatcher
 
@@ -35,10 +36,10 @@ class Ping(TaskDispatcher):
         super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return PingLinuxImplementation(self.address, self.count)
         raise NotImplementedError(
-            f'Ping is not implemented for {node.properties.get("os_family", "")}'
+            f'Ping is not implemented for architecture: {node.architecture}'
         )
 
 

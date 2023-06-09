@@ -9,6 +9,7 @@ from typing import Optional
 from enum import IntEnum
 
 from netunicorn.base import Result, Failure, Success, Task, TaskDispatcher
+from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
 
 from selenium import webdriver
@@ -101,11 +102,11 @@ class WatchYouTubeVideo(TaskDispatcher):
         super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return WatchYouTubeVideoLinuxImplementation(self.video_url, self.duration, name=self.name)
 
         raise NotImplementedError(
-            f'WatchYouTubeVideo is not implemented for {node.properties.get("os_family", "")}'
+            f'WatchYouTubeVideo is not implemented for architecture: {node.architecture}'
         )
 
 

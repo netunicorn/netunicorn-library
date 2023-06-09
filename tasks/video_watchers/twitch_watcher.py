@@ -8,6 +8,7 @@ import time
 from typing import Optional
 
 from netunicorn.base import Result, Success, Task, TaskDispatcher
+from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
 
 from selenium import webdriver
@@ -48,11 +49,11 @@ class WatchTwitchStream(TaskDispatcher):
         super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return WatchTwitchStreamLinuxImplementation(self.video_url, self.duration, name=self.name)
 
         raise NotImplementedError(
-            f'WatchYouTubeVideo is not implemented for {node.properties.get("os_family", "")}'
+            f'WatchTwitchVideo is not implemented for architecture: {node.architecture}'
         )
 
 
