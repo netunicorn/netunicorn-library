@@ -1,17 +1,18 @@
 import subprocess
 from typing import Dict
 
+from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
 from netunicorn.base.task import Failure, Task, TaskDispatcher
 
 
 class SpeedTest(TaskDispatcher):
     def dispatch(self, node: Node) -> Task:
-        if node.properties.get("os_family", "").lower() == "linux":
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return SpeedTestLinuxImplementation()
 
         raise NotImplementedError(
-            f'SpeedTest is not implemented for {node.properties.get("os_family", "")}'
+            f'SpeedTest is not implemented for architecture: {node.architecture}'
         )
 
 
