@@ -27,8 +27,7 @@ class UploadToWebDav(TaskDispatcher):
 
         super().__init__(*args, **kwargs)
 
-    def dispatch(self, node: Node) -> Task:
-        result = UploadToWebDavImplementation(
+        self.linux_implementation = UploadToWebDavImplementation(
             self.filepaths,
             self.endpoint,
             self.username,
@@ -36,10 +35,11 @@ class UploadToWebDav(TaskDispatcher):
             self.authentication,
             name=self.name,
         )
+        self.linux_implementation.requirements = ["sudo apt-get install -y curl"]
 
+    def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            result.requirements = ["sudo apt-get install -y curl"]
-            return result
+            return self.linux_implementation
 
         raise NotImplementedError(
             f"UploadToWebDav is not implemented for {node.architecture}"

@@ -1,5 +1,5 @@
 """
-Selenium-based Vimeo watcher
+Selenium-based Twitch watcher
 """
 import os
 import random
@@ -28,6 +28,7 @@ def watch(
     options = Options()
     options.add_argument("--no-sandbox")
     options.add_argument("--autoplay-policy=no-user-gesture-required")
+    options.add_argument("--disable-dev-shm-usage")
     if chrome_location:
         options.binary_location = chrome_location
     driver = webdriver.Chrome(service=Service(), options=options)
@@ -44,13 +45,14 @@ def watch(
 
 class WatchTwitchStream(TaskDispatcher):
     def __init__(self, video_url: str, duration: Optional[int] = None, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.video_url = video_url
         self.duration = duration
-        super().__init__(*args, **kwargs)
+        self.linux_implementation = WatchTwitchStreamLinuxImplementation(self.video_url, self.duration, name=self.name)
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return WatchTwitchStreamLinuxImplementation(self.video_url, self.duration, name=self.name)
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'WatchTwitchVideo is not implemented for architecture: {node.architecture}'
@@ -59,11 +61,8 @@ class WatchTwitchStream(TaskDispatcher):
 
 class WatchTwitchStreamLinuxImplementation(Task):
     requirements = [
-        "sudo apt update",
-        "sudo apt install -y python3-pip wget xvfb",
+        "apt install -y python3-pip wget xvfb procps chromium chromium-driver",
         "pip3 install selenium webdriver-manager",
-        "sudo apt install -y chromium-browser",
-        "from webdriver_manager.chrome import ChromeDriverManager; from webdriver_manager.core.utils import ChromeType; ChromeDriverManager(chrome_type=ChromeType.CHROMIUM,path='/usr/bin/').install()",
     ]
 
     def __init__(
@@ -73,7 +72,7 @@ class WatchTwitchStreamLinuxImplementation(Task):
         self.duration = duration
         self.chrome_location = chrome_location
         if not self.chrome_location:
-            self.chrome_location = "/usr/bin/chromium-browser"
+            self.chrome_location = "/usr/bin/chromium"
         super().__init__(*args, **kwargs)
 
     def run(self):

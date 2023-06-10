@@ -13,13 +13,17 @@ class StartCapture(TaskDispatcher):
         super().__init__(*args, **kwargs)
         self.filepath = filepath
         self.arguments = arguments
-        self.args = args
-        self.kwargs = kwargs
+
+        self.linux_implementation = StartCaptureLinuxImplementation(
+            filepath=self.filepath,
+            arguments=self.arguments,
+            *args,
+            **kwargs
+        )
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return StartCaptureLinuxImplementation(filepath=self.filepath, arguments=self.arguments, *self.args,
-                                                   **self.kwargs)
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'StartCapture is not implemented for {node.architecture}'
@@ -49,17 +53,16 @@ class StartCaptureLinuxImplementation(Task):
 class StopNamedCapture(TaskDispatcher):
     def __init__(self, start_capture_task_name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.args = args
-        self.kwargs = kwargs
         self.start_capture_task_name = start_capture_task_name
+        self.linux_implementation = StopNamedCaptureLinuxImplementation(
+            capture_task_name=self.start_capture_task_name,
+            *args,
+            **kwargs,
+        )
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return StopNamedCaptureLinuxImplementation(
-                *self.args,
-                capture_task_name=self.start_capture_task_name,
-                **self.kwargs,
-            )
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'StopCapture is not implemented for {node.architecture}'
@@ -67,6 +70,8 @@ class StopNamedCapture(TaskDispatcher):
 
 
 class StopNamedCaptureLinuxImplementation(Task):
+    requirements = ["sudo apt-get update", "sudo apt-get install -y tcpdump"]
+
     def __init__(self, capture_task_name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.capture_task_name = capture_task_name
@@ -84,12 +89,11 @@ class StopNamedCaptureLinuxImplementation(Task):
 class StopAllTCPDumps(TaskDispatcher):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.args = args
-        self.kwargs = kwargs
+        self.linux_implementation = StopAllTCPDumpsLinuxImplementation(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return StopAllTCPDumpsLinuxImplementation(*self.args, **self.kwargs)
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'StopAllTCPDumps is not implemented for {node.architecture}'

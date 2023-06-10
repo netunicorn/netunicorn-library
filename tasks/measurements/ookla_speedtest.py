@@ -7,9 +7,13 @@ from netunicorn.base.task import Failure, Task, TaskDispatcher
 
 
 class SpeedTest(TaskDispatcher):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.linux_instance = SpeedTestLinuxImplementation(name=self.name)
+
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return SpeedTestLinuxImplementation()
+            return self.linux_instance
 
         raise NotImplementedError(
             f'SpeedTest is not implemented for architecture: {node.architecture}'
@@ -20,7 +24,7 @@ class SpeedTestLinuxImplementation(Task):
     requirements = ["pip install speedtest-cli"]
 
     def run(self):
-        result = subprocess.run(["speedtest-cli", "--simple"], capture_output=True)
+        result = subprocess.run(["speedtest-cli", "--simple", "--secure"], capture_output=True)
         if result.returncode != 0:
             return Failure(
                 result.stdout.decode("utf-8").strip()
