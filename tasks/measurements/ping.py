@@ -31,13 +31,14 @@ class PingResult:
 
 class Ping(TaskDispatcher):
     def __init__(self, address: str, count: int = 1, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.address = address
         self.count = count
-        super().__init__(*args, **kwargs)
+        self.linux_implementation = PingLinuxImplementation(self.address, self.count)
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return PingLinuxImplementation(self.address, self.count)
+            return self.linux_implementation
         raise NotImplementedError(
             f'Ping is not implemented for architecture: {node.architecture}'
         )

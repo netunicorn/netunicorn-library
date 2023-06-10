@@ -13,16 +13,17 @@ class StartQoECollectionServer(TaskDispatcher):
     def __init__(
         self, data_folder: str = ".", interface: str = "0.0.0.0", port: int = 34543, *args, **kwargs,
     ):
+        super().__init__(*args, **kwargs)
         self.data_folder = data_folder
         self.interface = interface
         self.port = port
-        super().__init__(*args, **kwargs)
+        self.linux_implementation = StartQoECollectionServerLinuxImplementation(
+                self.data_folder, self.interface, self.port, name=self.name
+            )
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return StartQoECollectionServerLinuxImplementation(
-                self.data_folder, self.interface, self.port, name=self.name
-            )
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'StartQoECollectionServer is not implemented for {node.architecture}'
@@ -77,12 +78,15 @@ class StartQoECollectionServerLinuxImplementation(Task):
 
 class StopQoECollectionServer(TaskDispatcher):
     def __init__(self, start_task_name: str, *args, **kwargs):
-        self.start_task_name = start_task_name
         super().__init__(*args, **kwargs)
+        self.start_task_name = start_task_name
+        self.linux_implementation = StopQoECollectionServerLinuxImplementation(
+            start_task_name=self.start_task_name, name=self.name
+        )
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return StopQoECollectionServerLinuxImplementation(start_task_name=self.start_task_name, name=self.name)
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'StopQoECollectionServer is not implemented for {node.architecture}'
@@ -123,10 +127,7 @@ class WatchYouTubeVideo(TaskDispatcher):
         self.qoe_server_port = qoe_server_port
         self.report_time = report_time
         super().__init__(*args, **kwargs)
-
-    def dispatch(self, node: Node) -> Task:
-        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
-            return WatchYouTubeVideoLinuxImplementation(
+        self.linux_implementation = WatchYouTubeVideoLinuxImplementation(
                 self.video_url,
                 self.duration,
                 self.quality,
@@ -135,6 +136,10 @@ class WatchYouTubeVideo(TaskDispatcher):
                 self.report_time,
                 name=self.name,
             )
+
+    def dispatch(self, node: Node) -> Task:
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
+            return self.linux_implementation
 
         raise NotImplementedError(
             f'WatchYouTubeVideo is not implemented for architecture: {node.architecture}'
