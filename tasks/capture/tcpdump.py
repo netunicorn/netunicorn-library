@@ -70,7 +70,7 @@ class StopNamedCapture(TaskDispatcher):
 
 
 class StopNamedCaptureLinuxImplementation(Task):
-    requirements = ["sudo apt-get update", "sudo apt-get install -y tcpdump"]
+    requirements = ["sudo apt-get update", "sudo apt-get install -y tcpdump", "sudo apt-get install -y procps"]
 
     def __init__(self, capture_task_name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
