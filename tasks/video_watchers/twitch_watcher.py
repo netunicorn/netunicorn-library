@@ -13,7 +13,7 @@ from netunicorn.base.nodes import Node
 
 
 def watch(
-    url: str, duration: int = 10, chrome_location: Optional[str] = None
+    url: str, duration: int = 10, chrome_location: Optional[str] = None, webdriver_arguments: Optional[list] = None
 ) -> Result[str, str]:
     from selenium import webdriver
     from selenium.webdriver.chrome.options import Options
@@ -29,6 +29,9 @@ def watch(
     options.add_argument("--no-sandbox")
     options.add_argument("--autoplay-policy=no-user-gesture-required")
     options.add_argument("--disable-dev-shm-usage")
+    if webdriver_arguments:
+        for argument in webdriver_arguments:
+            options.add_argument(argument)
     if chrome_location:
         options.binary_location = chrome_location
     driver = webdriver.Chrome(service=Service(), options=options)
