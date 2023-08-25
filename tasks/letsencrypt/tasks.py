@@ -1,4 +1,3 @@
-import dns.resolver
 import requests
 from returns.result import Success, Failure, Result
 
@@ -15,6 +14,7 @@ def validate_http_01(domain: str, token_name: str, token_data: str) -> Result[No
 
 
 def validate_dns_01(domain: str, token: str) -> Result[None, str]:
+    import dns.resolver
     try:
         result = dns.resolver.resolve(f"_acme-challenge.{domain}", "TXT")
         result = list(result.response.answer[0])[-1].strings[0]

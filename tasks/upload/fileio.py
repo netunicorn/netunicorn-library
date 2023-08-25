@@ -2,9 +2,7 @@
 Uploads files to file.io -- temporary file storage
 """
 
-import os
 import subprocess
-from typing import Literal, Optional, Set
 
 from netunicorn.base.nodes import Architecture, Node
 from netunicorn.base.task import Task, TaskDispatcher

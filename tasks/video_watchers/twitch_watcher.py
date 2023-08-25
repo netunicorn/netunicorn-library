@@ -11,14 +11,14 @@ from netunicorn.base import Result, Success, Task, TaskDispatcher
 from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
 
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-
 
 def watch(
     url: str, duration: int = 10, chrome_location: Optional[str] = None
 ) -> Result[str, str]:
+    from selenium import webdriver
+    from selenium.webdriver.chrome.options import Options
+    from selenium.webdriver.chrome.service import Service
+
     display_number = random.randint(100, 500)
     xvfb_process = subprocess.Popen(
         ["Xvfb", f":{display_number}", "-screen", "0", "1920x1080x24"]
