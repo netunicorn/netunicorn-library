@@ -77,11 +77,26 @@ def watch(
 
 
 class WatchVimeoVideo(TaskDispatcher):
-    def __init__(self, video_url: str, duration: Optional[int] = None, *args, **kwargs):
+    def __init__(
+            self,
+            video_url: str,
+            duration: Optional[int] = None,
+            chrome_location: Optional[str] = None,
+            webdriver_arguments: Optional[list] = None,
+            *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.video_url = video_url
         self.duration = duration
-        self.linux_implementation = WatchVimeoVideoLinuxImplementation(self.video_url, self.duration, name=self.name)
+        self.chrome_location = chrome_location
+        self.webdriver_arguments = webdriver_arguments
+        self.linux_implementation = WatchVimeoVideoLinuxImplementation(
+            self.video_url,
+            self.duration,
+            self.chrome_location,
+            self.webdriver_arguments,
+            name=self.name
+        )
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
@@ -103,6 +118,7 @@ class WatchVimeoVideoLinuxImplementation(Task):
         video_url: str,
         duration: Optional[int] = None,
         chrome_location: Optional[str] = None,
+        webdriver_arguments: Optional[list] = None,
         *args,
         **kwargs
     ):
@@ -111,10 +127,11 @@ class WatchVimeoVideoLinuxImplementation(Task):
         self.chrome_location = chrome_location
         if not self.chrome_location:
             self.chrome_location = "/usr/bin/chromium"
+        self.webdriver_arguments = webdriver_arguments
         super().__init__(*args, **kwargs)
 
     def run(self):
-        return watch(self.video_url, self.duration, self.chrome_location)
+        return watch(self.video_url, self.duration, self.chrome_location, self.webdriver_arguments)
 
 
 if __name__ == "__main__":
