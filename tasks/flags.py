@@ -60,12 +60,13 @@ class GetFlagTask(Task):
 
 class WaitForExactFlagResultTask(Task):
     def __init__(
-            self,
-            flag_name: str,
-            values: FlagValues,
-            sleep_time: float = 1,
-            attempts: Optional[int] = None,
-            *args, **kwargs
+        self,
+        flag_name: str,
+        values: FlagValues,
+        sleep_time: float = 1,
+        attempts: Optional[int] = None,
+        *args,
+        **kwargs,
     ):
         self.flag_name = quote_plus_and_warn(flag_name)
         self.sleep_time = sleep_time
@@ -84,17 +85,17 @@ class WaitForExactFlagResultTask(Task):
         result = None
         counter = 0
         while result != self.values:
-            result = req.get(
+            request_info = req.get(
                 f"{gateway}/api/v1/experiment/{experiment_id}/flag/{self.flag_name}"
             )
-            if result.status_code == 200:
-                result = result.json()
+            if request_info.status_code == 200:
+                result = request_info.json()
                 if result and FlagValues(**result) == self.values:
                     break
 
             # 404 is a normal result -- flag has not been set yet
-            if result.status_code != 404:
-                result.raise_for_status()
+            if request_info.status_code != 404:
+                request_info.raise_for_status()
 
             counter += 1
             if self.attempts is not None and counter >= self.attempts:
@@ -105,7 +106,13 @@ class WaitForExactFlagResultTask(Task):
 
 
 class _AtomicOperationFlagTask(Task):
-    def __init__(self, flag_name: str, operation: Literal['increment', 'decrement'], *args, **kwargs):
+    def __init__(
+        self,
+        flag_name: str,
+        operation: Literal["increment", "decrement"],
+        *args,
+        **kwargs,
+    ):
         self.flag_name = quote_plus_and_warn(flag_name)
         self.operation = operation
         super().__init__(*args, **kwargs)
@@ -124,9 +131,9 @@ class _AtomicOperationFlagTask(Task):
 
 class AtomicIncrementFlagTask(_AtomicOperationFlagTask):
     def __init__(self, flag_name: str, *args, **kwargs):
-        super().__init__(flag_name, 'increment', *args, **kwargs)
+        super().__init__(flag_name, "increment", *args, **kwargs)
 
 
 class AtomicDecrementFlagTask(_AtomicOperationFlagTask):
     def __init__(self, flag_name: str, *args, **kwargs):
-        super().__init__(flag_name, 'decrement', *args, **kwargs)
+        super().__init__(flag_name, "decrement", *args, **kwargs)
