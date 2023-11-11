@@ -147,7 +147,7 @@ class CloudflareSpeedTestLinuxImplementation(Task):
     requirements = [
         "apt install -y python3-pip wget xvfb procps chromium chromium-driver",
         "pip3 install selenium webdriver-manager",
-        "mkdir -p /tmp/cloudflare/speedtest"
+        "mkdir -p /tmp/cloudflare/speedtest",
         "wget https://github.com/netunicorn/netunicorn-library/releases/download/cloudflare-speedtest-0.1/bundle.js -O /tmp/cloudflare/speedtest/bundle.js",
         "wget https://github.com/netunicorn/netunicorn-library/releases/download/cloudflare-speedtest-0.1/test.html -O /tmp/cloudflare/speedtest/test.html",
     ]
