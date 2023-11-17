@@ -3,22 +3,28 @@ import time
 import signal
 from typing import List, Optional
 
-from netunicorn.base.architecture import Architecture
-from netunicorn.base.nodes import Node
-from netunicorn.base import Task, TaskDispatcher, Result, Success, Failure
+from netunicorn.base import (
+    Task,
+    TaskDispatcher,
+    Result,
+    Success,
+    Failure,
+    Node,
+    Architecture,
+)
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 
 class StartCapture(TaskDispatcher):
-    def __init__(self, filepath: str, arguments: Optional[List[str]] = None, *args, **kwargs):
+    def __init__(
+        self, filepath: str, arguments: Optional[List[str]] = None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.filepath = filepath
         self.arguments = arguments
 
         self.linux_implementation = StartCaptureLinuxImplementation(
-            filepath=self.filepath,
-            arguments=self.arguments,
-            *args,
-            **kwargs
+            filepath=self.filepath, arguments=self.arguments, *args, **kwargs
         )
 
     def dispatch(self, node: Node) -> Task:
@@ -26,14 +32,16 @@ class StartCapture(TaskDispatcher):
             return self.linux_implementation
 
         raise NotImplementedError(
-            f'StartCapture is not implemented for {node.architecture}'
+            f"StartCapture is not implemented for {node.architecture}"
         )
 
 
 class StartCaptureLinuxImplementation(Task):
     requirements = ["sudo apt-get update", "sudo apt-get install -y tcpdump"]
 
-    def __init__(self, filepath: str, arguments: Optional[List[str]] = None, *args, **kwargs):
+    def __init__(
+        self, filepath: str, arguments: Optional[List[str]] = None, *args, **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.arguments = arguments or []
         self.filepath = filepath
@@ -42,12 +50,20 @@ class StartCaptureLinuxImplementation(Task):
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
 
         proc = subprocess.Popen(
-            ["tcpdump"] + self.arguments + ["-U", "-w", self.filepath]
+            ["tcpdump"] + self.arguments + ["-U", "-w", self.filepath],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         time.sleep(2)
         if (exit_code := proc.poll()) is None:  # not finished yet
             return Success(proc.pid)
-        return Failure(f"Tcpdump terminated with return code {exit_code}")
+
+        text = ""
+        if proc.stdout:
+            text += proc.stdout.read().decode("utf-8") + "\n"
+        if proc.stderr:
+            text += proc.stderr.read().decode("utf-8")
+        return Failure(f"Tcpdump terminated with return code {exit_code}" + text)
 
 
 class StopNamedCapture(TaskDispatcher):
@@ -65,12 +81,16 @@ class StopNamedCapture(TaskDispatcher):
             return self.linux_implementation
 
         raise NotImplementedError(
-            f'StopCapture is not implemented for {node.architecture}'
+            f"StopCapture is not implemented for {node.architecture}"
         )
 
 
 class StopNamedCaptureLinuxImplementation(Task):
-    requirements = ["sudo apt-get update", "sudo apt-get install -y tcpdump", "sudo apt-get install -y procps"]
+    requirements = [
+        "sudo apt-get update",
+        "sudo apt-get install -y tcpdump",
+        "sudo apt-get install -y procps",
+    ]
 
     def __init__(self, capture_task_name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -78,12 +98,14 @@ class StopNamedCaptureLinuxImplementation(Task):
 
     def run(self):
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-        pid = self.previous_steps.get(self.capture_task_name, [Failure("Named StartCapture not found")])[-1]
+        pid = self.previous_steps.get(
+            self.capture_task_name, [Failure("Named StartCapture not found")]
+        )[-1]
         if isinstance(pid, Failure):
             return pid
 
         pid = pid.unwrap()
-        return subprocess.check_output(["kill", str(pid)])
+        return subprocess_run(["kill", str(pid)])
 
 
 class StopAllTCPDumps(TaskDispatcher):
@@ -96,7 +118,7 @@ class StopAllTCPDumps(TaskDispatcher):
             return self.linux_implementation
 
         raise NotImplementedError(
-            f'StopAllTCPDumps is not implemented for {node.architecture}'
+            f"StopAllTCPDumps is not implemented for {node.architecture}"
         )
 
 
@@ -106,7 +128,4 @@ class StopAllTCPDumpsLinuxImplementation(Task):
 
     def run(self):
         signal.signal(signal.SIGCHLD, signal.SIG_IGN)
-        subprocess.Popen(
-            ["killall", "-w", "tcpdump"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
-        )
-        return "Successfully killed all tcpdump processes"
+        return subprocess_run(["killall", "-w", "tcpdump"])

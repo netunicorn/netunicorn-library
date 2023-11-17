@@ -1,9 +1,7 @@
-import subprocess
 from typing import Dict
 
-from netunicorn.base.architecture import Architecture
-from netunicorn.base.nodes import Node
-from netunicorn.base.task import Failure, Task, TaskDispatcher
+from netunicorn.base import Architecture, Node, Task, TaskDispatcher
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 
 class SpeedTest(TaskDispatcher):
@@ -16,7 +14,7 @@ class SpeedTest(TaskDispatcher):
             return self.linux_instance
 
         raise NotImplementedError(
-            f'SpeedTest is not implemented for architecture: {node.architecture}'
+            f"SpeedTest is not implemented for architecture: {node.architecture}"
         )
 
 
@@ -24,19 +22,13 @@ class SpeedTestLinuxImplementation(Task):
     requirements = ["pip install speedtest-cli"]
 
     def run(self):
-        result = subprocess.run(["speedtest-cli", "--simple", "--secure"], capture_output=True)
-        if result.returncode != 0:
-            return Failure(
-                result.stdout.decode("utf-8").strip()
-                + "\n"
-                + result.stderr.decode("utf-8").strip()
-            )
-
-        return self._format_data(result.stdout.decode("utf-8"))
+        return subprocess_run(["speedtest-cli", "--simple", "--secure"]).map(
+            self._format_data
+        )
 
     @staticmethod
     def _format_data(data: str) -> Dict[str, Dict]:
-        ping, download, upload, _ = data.split("\n")
+        ping, download, upload, *other = data.split("\n")
         return {
             "ping": {"value": float(ping.split(" ")[1]), "unit": ping.split(" ")[2]},
             "download": {
@@ -47,4 +39,5 @@ class SpeedTestLinuxImplementation(Task):
                 "value": float(upload.split(" ")[1]),
                 "unit": upload.split(" ")[2],
             },
+            "other": other,
         }

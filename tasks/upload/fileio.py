@@ -1,11 +1,8 @@
 """
 Uploads files to file.io -- temporary file storage
 """
-
-import subprocess
-
-from netunicorn.base.nodes import Architecture, Node
-from netunicorn.base.task import Task, TaskDispatcher
+from netunicorn.base import Architecture, Node, Task, TaskDispatcher
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 
 class UploadToFileIO(TaskDispatcher):
@@ -32,7 +29,10 @@ class UploadToFileIOCurlImplementation(Task):
         self.expires = expires
 
     def run(self):
-        command = ["curl", "-F", f"file=@{self.filepath}", f"https://file.io?expires={self.expires}"]
-        return subprocess.run(command, check=True, capture_output=True).stdout.decode("utf-8")
-
-
+        command = [
+            "curl",
+            "-F",
+            f"file=@{self.filepath}",
+            f"https://file.io?expires={self.expires}",
+        ]
+        return subprocess_run(command)

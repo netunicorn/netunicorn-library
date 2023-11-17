@@ -1,10 +1,8 @@
-import subprocess
 from dataclasses import dataclass
 from typing import List
 
-from netunicorn.base.architecture import Architecture
-from netunicorn.base.nodes import Node
-from netunicorn.base.task import Failure, Task, TaskDispatcher
+from netunicorn.base import Architecture, Node, Task, TaskDispatcher
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 
 @dataclass
@@ -40,7 +38,7 @@ class Ping(TaskDispatcher):
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return self.linux_implementation
         raise NotImplementedError(
-            f'Ping is not implemented for architecture: {node.architecture}'
+            f"Ping is not implemented for architecture: {node.architecture}"
         )
 
 
@@ -53,17 +51,9 @@ class PingLinuxImplementation(Task):
         super().__init__(*args, **kwargs)
 
     def run(self):
-        result = subprocess.run(
-            ["ping", self.address, "-c", str(self.count)], capture_output=True
+        return subprocess_run(["ping", self.address, "-c", str(self.count)]).map(
+            self._format
         )
-        if result.returncode != 0:
-            return Failure(
-                result.stdout.decode("utf-8").strip()
-                + "\n"
-                + result.stderr.decode("utf-8").strip()
-            )
-
-        return self._format(result.stdout.decode("utf-8"))
 
     def _format(self, output: str) -> PingResult:
         raw_output = output[:]

@@ -1,7 +1,7 @@
-import subprocess
 from typing import List, Optional
 
 from netunicorn.base import Task
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 
 class StartServer(Task):
@@ -12,7 +12,7 @@ class StartServer(Task):
     requirements = ["sudo apt install netperf"]
 
     def run(self) -> str:
-        return subprocess.check_output(["netserver"]).decode("utf-8")
+        return subprocess_run(["netserver"])
 
 
 class StopServer(Task):
@@ -21,7 +21,7 @@ class StopServer(Task):
     """
 
     def run(self) -> str:
-        return subprocess.check_output(["killall", "netserver"]).decode("utf-8")
+        return subprocess_run(["killall", "netserver"])
 
 
 class FlentCommand(Task):
@@ -31,13 +31,13 @@ class FlentCommand(Task):
     ]
 
     def __init__(
-            self,
-            test_name: str = "rrul",
-            host: str = "netperf-west.bufferbloat.net",
-            duration: int = 60,
-            additional_arguments: Optional[List[str]] = None,
-            *args,
-            **kwargs,
+        self,
+        test_name: str = "rrul",
+        host: str = "netperf-west.bufferbloat.net",
+        duration: int = 60,
+        additional_arguments: Optional[List[str]] = None,
+        *args,
+        **kwargs,
     ):
         self.test_name = test_name
         self.host = host
@@ -48,7 +48,7 @@ class FlentCommand(Task):
     def run(self) -> str:
         command = ["flent", self.test_name, "-H", self.host, "-l", str(self.duration)]
         command.extend(self.additional_arguments)
-        return subprocess.check_output(command).decode("utf-8")
+        return subprocess_run(command)
 
 
 class PingTest(FlentCommand):

@@ -1,7 +1,7 @@
-import subprocess
 from typing import Optional
 
 from netunicorn.base import Node, Architecture, Task, TaskDispatcher
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 __all__ = [
     "NDT7SpeedTest",
@@ -18,14 +18,13 @@ class _NDTSpeedTestImplementation(Task):
         *args,
         **kwargs,
     ):
-        self.flags = flags or ["-format json"]
+        self.flags = flags or ["-format", "json"]
         if source_ip:
-            self.flags += [f"-source {source_ip}"]
+            self.flags += ["-source", f"{source_ip}"]
         super().__init__(*args, **kwargs)
 
     def run(self) -> str:
-        command = f"ndt7-client {' '.join(self.flags)}"
-        return subprocess.check_output(command, shell=True).decode("utf-8")
+        return subprocess_run(["ndt7-client"] + self.flags)
 
 
 class NDT7SpeedTestLinuxAMD64(_NDTSpeedTestImplementation):

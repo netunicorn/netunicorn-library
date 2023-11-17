@@ -1,7 +1,8 @@
 import subprocess
 import time
 
-from netunicorn.base.task import Task
+from netunicorn.base import Task
+from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 
 class DummyTask(Task):
@@ -20,9 +21,12 @@ class SleepTask(Task):
 
 
 class ShellCommand(Task):
-    def __init__(self, command: str, *args, **kwargs):
+    def __init__(self, command: list[str], *args, **kwargs):
         self.command = command
         super().__init__(*args, **kwargs)
 
     def run(self):
-        return subprocess.check_output(self.command, shell=True)
+        if isinstance(self.command, str):
+            # legacy mode
+            return subprocess.check_output(self.command, shell=True)
+        return subprocess_run(self.command)
