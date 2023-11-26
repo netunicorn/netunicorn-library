@@ -7,7 +7,7 @@ import subprocess
 import time
 from typing import Optional
 
-from netunicorn.base import Result, Failure, Success, Task, TaskDispatcher
+from netunicorn.base import Failure, Result, Success, Task, TaskDispatcher
 from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
 

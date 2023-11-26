@@ -1,4 +1,4 @@
-from scapy.layers.inet import IP, ICMP
+from scapy.layers.inet import ICMP, IP
 from scapy.sendrecv import send
 
 

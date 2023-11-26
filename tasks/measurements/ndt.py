@@ -1,6 +1,6 @@
 from typing import Optional
 
-from netunicorn.base import Node, Architecture, Task, TaskDispatcher
+from netunicorn.base import Architecture, Node, Task, TaskDispatcher
 from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 __all__ = [

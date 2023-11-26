@@ -5,7 +5,7 @@ import time
 from dataclasses import dataclass
 from typing import Optional
 
-from netunicorn.base import Result, Task, TaskDispatcher, Node, Architecture, Success
+from netunicorn.base import Architecture, Node, Result, Success, Task, TaskDispatcher
 
 
 @dataclass

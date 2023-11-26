@@ -1,5 +1,5 @@
 import requests
-from returns.result import Success, Failure, Result
+from returns.result import Failure, Result, Success
 
 
 def validate_http_01(domain: str, token_name: str, token_data: str) -> Result[None, str]:

@@ -1,7 +1,9 @@
 import time
 from enum import Enum
-from netunicorn.base.task import Task, Success, Failure
-from .heartbleeder import connect, send_hello, bleed
+
+from netunicorn.base.task import Failure, Success, Task
+
+from .heartbleeder import bleed, connect, send_hello
 
 
 class TLSVersion(Enum):

@@ -1,5 +1,5 @@
+from netunicorn.base import Result, Task
 from netunicorn.library.tasks.tasks_utils import subprocess_run
-from netunicorn.base import Task, Result
 
 
 class TsharkCommand(Task):

@@ -1,6 +1,6 @@
-from .fake_mail import send_mail
-
 from netunicorn.base.task import Task
+
+from .fake_mail import send_mail
 
 
 class FakeMail(Task):

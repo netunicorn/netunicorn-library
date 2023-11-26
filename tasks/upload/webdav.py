@@ -1,7 +1,7 @@
 import os
 from typing import Literal, Optional, Set
 
-from netunicorn.base import Architecture, Node, Task, TaskDispatcher, Success, Failure
+from netunicorn.base import Architecture, Failure, Node, Success, Task, TaskDispatcher
 from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 

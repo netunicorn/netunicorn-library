@@ -4,9 +4,9 @@ import time
 from typing import Optional
 
 from jinja2 import Environment, FileSystemLoader
+from netunicorn.base import Failure, Success, Task, TaskDispatcher, is_successful
 from netunicorn.base.architecture import Architecture
 from netunicorn.base.nodes import Node
-from netunicorn.base import Failure, Success, Task, TaskDispatcher, is_successful
 
 
 class StartQoECollectionServer(TaskDispatcher):

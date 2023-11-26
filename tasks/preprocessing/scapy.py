@@ -18,7 +18,7 @@ class Get5Tuples(_ScapyTask):
         super().__init__(*args, **kwargs)
 
     def run(self) -> list[tuple[str, str, int, int, str]]:
-        from scapy.all import rdpcap, TCP, UDP, IP
+        from scapy.all import IP, TCP, UDP, rdpcap
 
         packets = rdpcap(self.filename)
         tuples = []
@@ -49,7 +49,7 @@ class GetDNSQueries(_ScapyTask):
         super().__init__(*args, **kwargs)
 
     def run(self) -> list[str]:
-        from scapy.all import rdpcap, DNSQR
+        from scapy.all import DNSQR, rdpcap
 
         pcap = rdpcap(self.filename)
         return [pkt[DNSQR].qname.decode() for pkt in pcap if DNSQR in pkt]
@@ -61,7 +61,7 @@ class GetHTTPHostHeaders(_ScapyTask):
         super().__init__(*args, **kwargs)
 
     def run(self) -> list[bytes]:
-        from scapy.all import rdpcap, Raw
+        from scapy.all import Raw, rdpcap
 
         packets = rdpcap(self.filename)
         return [
@@ -77,7 +77,7 @@ class GetICMPRequests(_ScapyTask):
         super().__init__(*args, **kwargs)
 
     def run(self) -> list[bytes]:
-        from scapy.all import rdpcap, ICMP
+        from scapy.all import ICMP, rdpcap
 
         packets = rdpcap(self.filename)
         return [pkt for pkt in packets if ICMP in pkt and pkt[ICMP].type == 8]
@@ -89,7 +89,7 @@ class GetUniqueARPMAC(_ScapyTask):
         super().__init__(*args, **kwargs)
 
     def run(self) -> set:
-        from scapy.all import rdpcap, ARP
+        from scapy.all import ARP, rdpcap
 
         packets = rdpcap(self.filename)
         return {pkt[ARP].hwsrc for pkt in packets if ARP in pkt}

@@ -13,12 +13,12 @@ TLS versions: 0x01 = 1.0, 0x02 = 1.1, 0x03 = 1.2
 
 import codecs
 import random
-import sys
-import struct
-import socket
 import re
+import socket
+import struct
+import sys
 import time
-from typing import Iterable, List, Tuple, Optional
+from typing import Iterable, List, Optional, Tuple
 
 #
 decode_hex = codecs.getdecoder("hex_codec")

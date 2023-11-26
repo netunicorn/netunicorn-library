@@ -1,7 +1,7 @@
-from scapy.layers.inet import IP, ICMP
+from scapy.layers.inet import ICMP, IP
 from scapy.layers.l2 import Ether
 from scapy.sendrecv import sendp
-from scapy.volatile import RandMAC, RandIP
+from scapy.volatile import RandIP, RandMAC
 
 
 def flood(iface: str = "eth0", count: int = 1000):

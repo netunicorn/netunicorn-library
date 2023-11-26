@@ -1,7 +1,7 @@
 import time
 
 from scapy.all import sendp
-from scapy.layers.l2 import Ether, ARP
+from scapy.layers.l2 import ARP, Ether
 
 
 def main(

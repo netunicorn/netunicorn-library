@@ -1,5 +1,6 @@
 import subprocess
-from netunicorn.base import Result, Success, Failure
+
+from netunicorn.base import Failure, Result, Success
 
 
 def subprocess_run(arguments: list[str]) -> Result:

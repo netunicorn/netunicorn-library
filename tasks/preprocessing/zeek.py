@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Optional
 
-from netunicorn.base import Task, TaskDispatcher, Result, Node, Architecture
+from netunicorn.base import Architecture, Node, Result, Task, TaskDispatcher
 from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 

@@ -2,7 +2,7 @@ import subprocess
 import time
 from typing import Optional
 
-from netunicorn.base import Task, Success, Failure
+from netunicorn.base import Failure, Success, Task
 from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 

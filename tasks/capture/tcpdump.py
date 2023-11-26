@@ -1,16 +1,16 @@
+import signal
 import subprocess
 import time
-import signal
 from typing import List, Optional
 
 from netunicorn.base import (
-    Task,
-    TaskDispatcher,
-    Result,
-    Success,
+    Architecture,
     Failure,
     Node,
-    Architecture,
+    Result,
+    Success,
+    Task,
+    TaskDispatcher,
 )
 from netunicorn.library.tasks.tasks_utils import subprocess_run
 

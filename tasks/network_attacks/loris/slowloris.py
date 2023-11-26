@@ -5,8 +5,8 @@ Originally: https://github.com/gkbrk/slowloris
 import logging
 import random
 import socket
-import time
 import ssl
+import time
 
 
 def send_line(self, line):

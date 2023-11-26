@@ -1,5 +1,5 @@
-from typing import Literal, Optional
 import warnings
+from typing import Literal, Optional
 from urllib.parse import quote_plus
 
 from netunicorn.base import Task
@@ -27,8 +27,9 @@ class SetFlagTask(Task):
         super().__init__(*args, **kwargs)
 
     def run(self) -> None:
-        import requests as req
         import os
+
+        import requests as req
 
         gateway = os.environ["NETUNICORN_GATEWAY_ENDPOINT"]
         experiment_id = os.environ["NETUNICORN_EXPERIMENT_ID"]
@@ -45,8 +46,9 @@ class GetFlagTask(Task):
         super().__init__(*args, **kwargs)
 
     def run(self) -> FlagValues:
-        import requests as req
         import os
+
+        import requests as req
 
         gateway = os.environ["NETUNICORN_GATEWAY_ENDPOINT"]
         experiment_id = os.environ["NETUNICORN_EXPERIMENT_ID"]
@@ -75,9 +77,10 @@ class WaitForExactFlagResultTask(Task):
         super().__init__(*args, **kwargs)
 
     def run(self) -> FlagValues:
-        import requests as req
         import os
         import time
+
+        import requests as req
 
         gateway = os.environ["NETUNICORN_GATEWAY_ENDPOINT"]
         experiment_id = os.environ["NETUNICORN_EXPERIMENT_ID"]
@@ -118,8 +121,9 @@ class _AtomicOperationFlagTask(Task):
         super().__init__(*args, **kwargs)
 
     def run(self) -> None:
-        import requests as req
         import os
+
+        import requests as req
 
         gateway = os.environ["NETUNICORN_GATEWAY_ENDPOINT"]
         experiment_id = os.environ["NETUNICORN_EXPERIMENT_ID"]
