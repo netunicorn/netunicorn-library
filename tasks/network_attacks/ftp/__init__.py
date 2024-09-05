@@ -1,5 +1,5 @@
 from netunicorn.base.task import Task
-
+from netunicorn.base import Failure, Result, Success
 from .brute_force_ftp import brute_force
 
 class BruteForceFTP(Task):

@@ -4,7 +4,7 @@
 import argparse
 import sys
 from ftplib import FTP
-
+from netunicorn.base import Failure, Result, Success
 from netunicorn.base.task import Task
 
 def brute_force(target, username, wordlist):
@@ -12,7 +12,7 @@ def brute_force(target, username, wordlist):
         ftp = FTP(target)
         ftp.login()
         ftp.quit()
-        return {'user': 'anonymous', 'password': 'anonymous'}
+        return Success('No credentials required for anonymous login')
     except:
         pass
 
@@ -23,12 +23,11 @@ def brute_force(target, username, wordlist):
                 ftp = FTP(target)
                 ftp.login(username, password)
                 ftp.quit()
-                return {'user': username, 'password': password}
+                
+                return Success(f'Login successful: User - {username}, Password - {password}')
             except:
                 print(f"[Attempt] target:- {target} - login:{username} - password:{password}")
-        return  {'user': None, 'password': None}
+        return Failure('No valid credentials found in wordlist')
     except:
         print('\nError with wordlist list')
-        sys.exit(0)
-
-
+        return Failure('Error with wordlist list')
