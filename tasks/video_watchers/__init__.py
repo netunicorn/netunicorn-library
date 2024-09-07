@@ -1,3 +1,4 @@
 from .twitch_watcher import WatchTwitchStream, WatchTwitchStreamLinuxImplementation
 from .vimeo_watcher import WatchVimeoVideo, WatchVimeoVideoLinuxImplementation
 from .youtube_watcher import WatchYouTubeVideo, WatchYouTubeVideoLinuxImplementation
+from .puffer_watcher import WatchPufferVideo, WatchPufferVideoLinuxImplementation
