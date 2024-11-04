@@ -16,6 +16,7 @@ class UploadToFTP(Task):
         username: str,
         password: str,
         destination_dir: str = "/",
+        timeout: int = 30,
         *args,
         **kwargs,
     ):
@@ -28,6 +29,7 @@ class UploadToFTP(Task):
           username (str): Username credential for FTP auth.
           password (str): Password credential for FTP auth.
           destination_dir (str): Destination directory on the FTP server where the file will be uploaded to. Defaults to "/".
+          timeout (int, optional): Timeout value for FTP connection measued in seconds. Defaults to 30 seconds.
         """
         super().__init__(*args, **kwargs)
         self.local_filepath = local_filepath
@@ -35,6 +37,7 @@ class UploadToFTP(Task):
         self.username = username
         self.password = password
         self.destination_dir = destination_dir
+        self.timeout = timeout
 
     def run(self) -> Result:
         """
@@ -57,7 +60,7 @@ class UploadToFTP(Task):
             if not os.path.isfile(self.local_filepath):
                 return Failure(f"Local file does not exist: {self.local_filepath}")
 
-            ftp = FTP(self.ftp_url, timeout=30)  # Modify timeout as needed
+            ftp = FTP(self.ftp_url, timeout=self.timeout)  # Modify timeout as needed
             ftp.login(user=self.username, passwd=self.password)
 
             if self.destination_dir:

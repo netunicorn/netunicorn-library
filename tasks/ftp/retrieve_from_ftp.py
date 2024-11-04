@@ -16,6 +16,7 @@ class RetrieveFromFTP(Task):
         username: str,
         password: str,
         local_dir: str = "./",
+        timeout: int = 30,
         *args,
         **kwargs,
     ):
@@ -28,6 +29,7 @@ class RetrieveFromFTP(Task):
           username (str): Username for FTP authentication.
           password (str): Password for FTP authentication.
           local_dir (str, optional): Local directory to save the retrieved file. Defaults to "./".
+          timeout (int, optional): Timeout value for FTP connection measued in seconds. Defaults to 30 seconds.
           *args: Variable length argument list.
           **kwargs: Arbitrary keyword arguments.
         """
@@ -37,6 +39,7 @@ class RetrieveFromFTP(Task):
         self.username = username
         self.password = password
         self.local_dir = local_dir
+        self.timeout = timeout
 
     def run(self) -> Result:
         """
@@ -55,15 +58,15 @@ class RetrieveFromFTP(Task):
 
         """
         try:
-            ftp = FTP(self.ftp_url, timeout=30)  # Modify timeout as needed
+            if not os.path.isdir(self.local_dir):
+                os.makedirs(self.local_dir, exist_ok=True)
+
+            ftp = FTP(self.ftp_url, timeout=self.timeout)  # Modify timeout as needed
             ftp.login(user=self.username, passwd=self.password)
 
             remote_dir, remote_filename = os.path.split(self.ftp_remote_filepath)
             if remote_dir:
                 ftp.cwd(remote_dir)
-
-            if not os.path.isdir(self.local_dir):
-                return Failure(f"Local directory does not exist: {self.local_dir}")
 
             local_filepath = os.path.join(self.local_dir, remote_filename)
             with open(local_filepath, "wb") as f:
