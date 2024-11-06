@@ -5,7 +5,7 @@ from netunicorn.base import Architecture, Node, Task, TaskDispatcher
 from netunicorn.library.tasks.tasks_utils import subprocess_run
 
 class UploadToGoogleCloudStorage(TaskDispatcher):
-    def __init__(self, local_filepath: str, bucket: str, target_filepath: str, auth_token: str = None, *args, **kwargs):
+    def __init__(self, local_filepath: str, bucket: str, target_filepath: str = "", auth_token: str = None, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.linux_implementation = UploadToGoogleCloudStorageCurlImplementation(
             local_filepath=local_filepath, bucket=bucket, target_filepath=target_filepath, auth_token=auth_token, name=self.name
