@@ -64,6 +64,7 @@ class UploadToGoogleCloudStorageCurlImplementation(Task):
 
         command = [
             "curl",
+            "--fail",
             "-v",
             "--upload-file",
             f"{self.local_filepath}",
