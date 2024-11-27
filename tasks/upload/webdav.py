@@ -72,5 +72,5 @@ class UploadToWebDavImplementation(Task):
             if self.authentication == "basic":
                 command += ["--user", f"{self.username}:{self.password}", "--basic"]
             results.append(subprocess_run(command))
-        container_type = Success if all([x.is_success for x in results]) else Failure
+        container_type = Success if all(isinstance(x, Success) for x in results) else Failure
         return container_type(results)
