@@ -1,30 +1,14 @@
-import time
 import subprocess
-from subprocess import Popen
-import os
-import logging
-import subprocess
-import time
 from netunicorn.base.architecture import Architecture # type: ignore
 from netunicorn.base.nodes import Node # type: ignore
-from netunicorn.base.task import Failure, Task, TaskDispatcher # type: ignore
-from netunicorn.client.remote import RemoteClient, RemoteClientException # type: ignore
-from netunicorn.base import Experiment, ExperimentStatus, Pipeline # type: ignore
-from netunicorn.library.tasks.basic import ShellCommand # type: ignore
-from netunicorn.base.architecture import Architecture # type: ignore
-from netunicorn.base.nodes import Node # type: ignore
-from netunicorn.base.task import Failure, Task, TaskDispatcher # type: ignore
-from netunicorn.base import Result, Failure, Success, Task, TaskDispatcher # type: ignore
-from netunicorn.base.architecture import Architecture # type: ignore
-from netunicorn.base.nodes import Node # type: ignore
-from returns.pipeline import is_successful # type: ignore
-from returns.result import Failure # type: ignore
+from netunicorn.base import Failure, Success, Task, TaskDispatcher # type: ignore
 
-class Ookla_Speedtest_CLI(TaskDispatcher):
-    def __init__(self, filepath: str, server: str = '', ip: str = '', timeout: int = 120, *args, **kwargs):
+
+class OoklaSpeedtestCLI(TaskDispatcher):
+    def __init__(self, target_server: str = '', source_ip: str = '', timeout: int = 120, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.linux_implementation = Ookla_Speedtest_CLI_LinuxImplementation(
-            filepath=filepath, timeout=timeout, server=server, ip=ip, name=self.name
+        self.linux_implementation = OoklaSpeedtestCLILinuxImplementation(
+            timeout=timeout, target_server=target_server, source_ip=source_ip, name=self.name
         )
 
     def dispatch(self, node: Node) -> Task:
@@ -34,38 +18,47 @@ class Ookla_Speedtest_CLI(TaskDispatcher):
             f"Ookla_Speedtest_CLI is not implemented for architecture: {node.architecture}"
         )
     
-class Ookla_Speedtest_CLI_LinuxImplementation(Task):
-    def __init__(self, filepath: str, server: str = '', ip: str = '', timeout: int = 120, *args, **kwargs):
-        self.filepath = filepath
+class OoklaSpeedtestCLILinuxImplementation(Task):
+    requirements = ["sudo DEBIAN_FRONTEND=noninteractive apt-get update -y",
+                    "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y curl gnupg2",
+                    (
+                        "curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/"
+                        "script.deb.sh | sudo bash"
+                    ),
+                    "sudo DEBIAN_FRONTEND=noninteractive apt-get install -y speedtest"
+                ]
+    def __init__(self, target_server: str = '', source_ip: str = '', timeout: int = 120, *args, **kwargs):
         self.timeout = timeout
-        self.server = server
-        self.ip = ip
+        self.target_server = target_server
+        self.source_ip = source_ip
         super().__init__(*args, **kwargs)
     
     def run(self):
         try:
-            with open(self.filepath, 'w') as outfile:
-                flags = ["--accept-gdpr", "--accept-license", "--progress=no", "--format=json", "-v"]
-                if self.server != '':
-                    flags.append(f"--server-id={self.server}")
-                if self.ip != '':
-                    flags.append(f"--ip={self.ip}")
-                result = subprocess.run(
-                    ["speedtest"] + flags,
-                    stdout=outfile,
-                    stderr=outfile,
-                    timeout=self.timeout
-                )
-            result = subprocess.run(["cat", self.filepath], capture_output = True)
+            flags = ["--accept-gdpr", "--accept-license", "--progress=no", "--format=json", "-v"]
+            if self.target_server != '':
+                flags.append(f"--server-id={self.target_server}")
+            if self.source_ip != '':
+                flags.append(f"--ip={self.source_ip}")
+            result = subprocess.run(
+                ["speedtest"] + flags,
+                capture_output=True,
+                text=True,
+                timeout=self.timeout
+            )
             if result.returncode == 0:
-                return Success({"test_result" : result.stdout.decode("utf8")})
+                return Success({"test_result" : result.stdout})
             else:
-                return Failure(f"Ookla_Speedtest_CLI failed with return code {result.returncode}, Error: {result.stdout.decode("utf-8").strip()}\n{result.stderr.decode("utf-8").strip()}")
+                return Failure(
+                    f"Ookla_Speedtest_CLI failed with return code {result.returncode}. "
+                    f"\nStdout: {result.stdout.strip()} "
+                    f"\nStderr: {result.stderr.strip()}"
+                )
         except subprocess.TimeoutExpired:
             return Failure("Ookla_Speedtest_CLI timed out.")
         except Exception as e:
             return Failure(f"Exception occurred: {str(e)}")
 
 if __name__ == "__main__":
-    cli_task = Ookla_Speedtest_CLI(filepath="ookla_cli_results.json", name="Ookla CLI Speedtest")
+    cli_task = OoklaSpeedtestCLI(name="Ookla CLI Speedtest")
     print(cli_task.run())
