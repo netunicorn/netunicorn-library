@@ -9,18 +9,25 @@ __all__ = [
     "NDT7SpeedTestLinuxARM64",
 ]
 
-
+"""
+Provides NDT7 speed test tasks for Linux AMD64 and ARM64 architectures.
+Refer to https://locate.measurementlab.net/admin/map/ipv4/ndt for a list of NDT7 servers.
+"""
 class _NDTSpeedTestImplementation(Task):
     def __init__(
         self,
         flags: Optional[list[str]] = None,
         source_ip: Optional[str] = None,
+        service_url: Optional[str] = None,
         *args,
         **kwargs,
     ):
         self.flags = flags or ["-format", "json"]
         if source_ip:
             self.flags += ["-source", f"{source_ip}"]
+        if service_url:
+            self.flags += ["-service-url", f"{service_url}"]
+
         super().__init__(*args, **kwargs)
 
     def run(self) -> str:
@@ -47,12 +54,13 @@ class NDT7SpeedTest(TaskDispatcher):
     def __init__(
         self,
         source_ip: Optional[str] = None,
+        service_url: Optional[str] = None,
         flags: Optional[list[str]] = None,
         *args,
         **kwargs,
     ):
-        self.amd64_task = NDT7SpeedTestLinuxAMD64(flags=flags, source_ip=source_ip)
-        self.arm64_task = NDT7SpeedTestLinuxARM64(flags=flags, source_ip=source_ip)
+        self.amd64_task = NDT7SpeedTestLinuxAMD64(flags=flags, source_ip=source_ip, service_url=service_url)
+        self.arm64_task = NDT7SpeedTestLinuxARM64(flags=flags, source_ip=source_ip, service_url=service_url)
         super().__init__(*args, **kwargs)
 
     def dispatch(self, node: Node) -> Task:
