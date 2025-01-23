@@ -6,15 +6,15 @@ from netunicorn.base import Architecture, Failure, Success, Task, TaskDispatcher
 from subprocess import CalledProcessError
 from dataclasses import dataclass
 
-REQ = [
-        "apt-get install curl --yes",
-        "curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash",
-        "apt-get install speedtest --yes",
-    ]
+UNIX_REQUIREMENTS = [
+    "apt-get install curl --yes",
+    "curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash",
+    "apt-get install speedtest --yes",
+]
 
 @dataclass
 class SpeedTestOptions:
-    server_id: str = ""
+    server_selection_task_name: str = ""
     server_ip: str = ""
     timeout: int = 100
 
@@ -29,6 +29,13 @@ class ServerInfo:
 
 class OoklaSpeedtest(TaskDispatcher):
     def __init__(self, options: SpeedTestOptions = SpeedTestOptions(), *args, **kwargs):
+        """
+        Use `SpeedTestOptions` to proivde either `server_selection_task_name` or `server_ip` to ping to a certain server.
+        If neither are provided, a server will be automatically selected.
+        If both are proived, the server id from the server selection task will be prioritized.
+
+        Additionally, the `timeout` time can be specify using `SpeedTestOptions`
+        """
         super().__init__(*args, **kwargs)
         self.linux_implementation = OoklaSpeedtestLinuxImplementation(options, name=self.name)
 
@@ -40,22 +47,33 @@ class OoklaSpeedtest(TaskDispatcher):
         )
     
 class OoklaSpeedtestLinuxImplementation(Task):
-    requirements = REQ
+    requirements = UNIX_REQUIREMENTS
 
     def __init__(self, options: SpeedTestOptions, *args, **kwargs):
         self.timeout = options.timeout
-        self.server_id = options.server_id
+        self.server_selection_task_name = options.server_selection_task_name
         self.source_ip = options.source_ip
         super().__init__(*args, **kwargs)
     
     def run(self):
+
         try:
             flags = ["--accept-gdpr", "--accept-license", "--progress=no", "--format=json"]
 
-            if self.server_id != '':
-                flags.append(f"--server-id={self.server_id}")
-            if self.source_ip != '':
-                 flags.append(f"--ip={self.source_ip}")
+            if self.server_selection_task_name != '':
+                server_id = self.previous_steps.get(self.server_selection_task_name, [Failure(f"{self.server_selection_task_name} not found")])[-1]
+                
+                if isinstance(server_id, Failure):
+                    return server_id
+                
+                else:
+                    flags.append(f"--server-id={server_id}")
+
+            elif self.server_id != '':
+                flags.append(f"--ip={self.source_ip}")
+
+            else:
+                pass
             
             result = subprocess.run(["speedtest"] + flags, stdout=subprocess.PIPE)
             result.check_returncode()
@@ -76,7 +94,14 @@ class OoklaSpeedtestLinuxImplementation(Task):
         
 
 class ServerSelection(TaskDispatcher):
-    def __init__(self, callback: Callable[[list[ServerInfo]], int], options: SpeedTestOptions = SpeedTestOptions(), *args, **kwargs):
+    """
+    Allows users to select a specific server from a list using a callback function.
+    """
+
+    def __init__(self, callback: Callable[[list[ServerInfo]], str], *args, **kwargs):
+        """
+        `callback` will recieve a list of `ServerInfo` and should return a single server id from that list.
+        """
         super().__init__(*args, **kwargs)
         self.linux_instance = ServerSelectionLinuxImplementation(callback, name=self.name)
 
@@ -89,9 +114,9 @@ class ServerSelection(TaskDispatcher):
         )
 
 class ServerSelectionLinuxImplementation(Task):
-    requirements = REQ
+    requirements = UNIX_REQUIREMENTS
 
-    def __init__(self, callback: Callable[[list[ServerInfo]], int], options: SpeedTestOptions, *args, **kwargs):
+    def __init__(self, callback: Callable[[list[ServerInfo]], str], *args, **kwargs):
         self.callback = callback
         super().__init__(*args, **kwargs)
     
@@ -112,7 +137,7 @@ class ServerSelectionLinuxImplementation(Task):
                 for server
                 in json.loads(result.stdout.decode())["servers"]
             ]
-            return {"server_id": self.callback(servers)}
+            return self.callback(servers)
         
         except CalledProcessError:
             return Failure(
