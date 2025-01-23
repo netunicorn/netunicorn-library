@@ -6,6 +6,12 @@ from netunicorn.base import Architecture, Failure, Success, Task, TaskDispatcher
 from subprocess import CalledProcessError
 from dataclasses import dataclass
 
+REQ = [
+        "apt-get install curl --yes",
+        "curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash",
+        "apt-get install speedtest --yes",
+    ]
+
 @dataclass
 class SpeedTestOptions:
     server_id: str = ""
@@ -30,20 +36,16 @@ class OoklaSpeedtest(TaskDispatcher):
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
             return self.linux_implementation
         raise NotImplementedError(
-            f"Ookla_Speedtest_CLI is not implemented for architecture: {node.architecture}"
+            f"Ookla Speedtest is not implemented for architecture: {node.architecture}"
         )
     
 class OoklaSpeedtestLinuxImplementation(Task):
-    requirements = [
-        "apt-get install curl --yes",
-        "curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash",
-        "apt-get install speedtest --yes",
-    ]
+    requirements = REQ
 
     def __init__(self, options: SpeedTestOptions, *args, **kwargs):
         self.timeout = options.timeout
         self.server_id = options.server_id
-        # self.source_ip = options.source_ip
+        self.source_ip = options.source_ip
         super().__init__(*args, **kwargs)
     
     def run(self):
@@ -52,8 +54,8 @@ class OoklaSpeedtestLinuxImplementation(Task):
 
             if self.server_id != '':
                 flags.append(f"--server-id={self.server_id}")
-            # if self.source_ip != '':
-            #     flags.append(f"--ip={self.source_ip}")
+            if self.source_ip != '':
+                 flags.append(f"--ip={self.source_ip}")
             
             result = subprocess.run(["speedtest"] + flags, stdout=subprocess.PIPE)
             result.check_returncode()
@@ -64,7 +66,7 @@ class OoklaSpeedtestLinuxImplementation(Task):
         
         except CalledProcessError:
             return Failure(
-                    f"Ookla_Speedtest_CLI failed with return code {result.returncode}. "
+                    f"Ookla Speedtest failed with return code {result.returncode}. "
                     f"\nStdout: {result.stdout.strip()} "
                     f"\nStderr: {result.stderr.strip()}"
                 )
@@ -87,11 +89,7 @@ class ServerSelection(TaskDispatcher):
         )
 
 class ServerSelectionLinuxImplementation(Task):
-    requirements = [
-        "apt-get install curl --yes",
-        "curl -s https://packagecloud.io/install/repositories/ookla/speedtest-cli/script.deb.sh | bash",
-        "apt-get install speedtest --yes",
-    ]
+    requirements = REQ
 
     def __init__(self, callback: Callable[[list[ServerInfo]], int], options: SpeedTestOptions, *args, **kwargs):
         self.callback = callback
