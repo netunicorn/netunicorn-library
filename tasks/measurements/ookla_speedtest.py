@@ -20,7 +20,7 @@ class SpeedTestOptions:
 
 @dataclass
 class ServerInfo:
-    id: int
+    id: str
     host: str
     port: int
     name: str
@@ -77,7 +77,7 @@ class OoklaSpeedtestLinuxImplementation(Task):
             
             result = subprocess.run(["speedtest"] + flags, stdout=subprocess.PIPE)
             result.check_returncode()
-            return Success({"test_result" : result.stdout})
+            return Success(json.loads(result.stdout))
                 
         except subprocess.TimeoutExpired:
             return Failure("Ookla Speedtest timed out.")
@@ -145,7 +145,3 @@ class ServerSelectionLinuxImplementation(Task):
                 f"\nStdout: {result.stdout.strip()} "
                 f"\nStderr: {result.stderr.strip()}"
             )
-        
-if __name__ == "__main__":
-    cli_task = OoklaSpeedtest(name="Ookla CLI Speedtest")
-    print(cli_task.run())
