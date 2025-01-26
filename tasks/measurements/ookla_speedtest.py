@@ -13,12 +13,6 @@ UNIX_REQUIREMENTS = [
 ]
 
 @dataclass
-class SpeedTestOptions:
-    server_selection_task_name: str = ""
-    source_ip: str = ""
-    timeout: int = 100
-
-@dataclass
 class ServerInfo:
     id: str
     host: str
@@ -28,16 +22,14 @@ class ServerInfo:
     country: str
 
 class OoklaSpeedtest(TaskDispatcher):
-    def __init__(self, options: SpeedTestOptions = SpeedTestOptions(), *args, **kwargs):
+    def __init__(self, server_selection_task_name: str = "", source_ip: str = "", timeout: int = 100, *args, **kwargs):
         """
-        Use `SpeedTestOptions` to proivde either `server_selection_task_name` or `server_ip` to ping to a certain server.
+        Proivde either `server_selection_task_name` or `source_ip` to ping to a certain server.
         If neither are provided, a server will be automatically selected.
         If both are proived, the server id from the server selection task will be prioritized.
-
-        Additionally, the `timeout` time can be specify using `SpeedTestOptions`
         """
         super().__init__(*args, **kwargs)
-        self.linux_implementation = OoklaSpeedtestLinuxImplementation(options, name=self.name)
+        self.linux_implementation = OoklaSpeedtestLinuxImplementation(server_selection_task_name, source_ip, timeout, name=self.name)
 
     def dispatch(self, node: Node) -> Task:
         if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
@@ -49,10 +41,10 @@ class OoklaSpeedtest(TaskDispatcher):
 class OoklaSpeedtestLinuxImplementation(Task):
     requirements = UNIX_REQUIREMENTS
 
-    def __init__(self, options: SpeedTestOptions, *args, **kwargs):
-        self.timeout = options.timeout
-        self.server_selection_task_name = options.server_selection_task_name
-        self.source_ip = options.source_ip
+    def __init__(self,server_selection_task_name: str, source_ip: str, timeout: int, *args, **kwargs):
+        self.timeout = timeout
+        self.server_selection_task_name = server_selection_task_name
+        self.source_ip = source_ip
         super().__init__(*args, **kwargs)
     
     def run(self):
@@ -67,8 +59,7 @@ class OoklaSpeedtestLinuxImplementation(Task):
                     return server_id
                 
                 else:
-                    flags.append(f"--server-id={server_id}")
-                    return Success(server_id.unwrap())
+                    flags.append(f"--server-id={server_id.unwrap()}")
 
             elif self.source_ip != '':
                 flags.append(f"--ip={self.source_ip}")
@@ -96,7 +87,7 @@ class OoklaSpeedtestLinuxImplementation(Task):
 
 class ServerSelection(TaskDispatcher):
     """
-    Allows users to select a specific server from a list using a callback function.
+    Inteded to be use in tandem with `OoklaSpeedtest`. Allows users to select a specific server from a list using a callback function.
     """
 
     def __init__(self, callback: Callable[[list[ServerInfo]], str], *args, **kwargs):
