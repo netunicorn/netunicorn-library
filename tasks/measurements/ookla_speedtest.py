@@ -15,7 +15,6 @@ UNIX_REQUIREMENTS = [
 @dataclass
 class SpeedTestOptions:
     server_selection_task_name: str = ""
-    server_ip: str = ""
     source_ip: str = ""
     timeout: int = 100
 
@@ -54,7 +53,6 @@ class OoklaSpeedtestLinuxImplementation(Task):
         self.timeout = options.timeout
         self.server_selection_task_name = options.server_selection_task_name
         self.source_ip = options.source_ip
-        self.server_ip = options.server_ip
         super().__init__(*args, **kwargs)
     
     def run(self):
@@ -71,7 +69,7 @@ class OoklaSpeedtestLinuxImplementation(Task):
                 else:
                     flags.append(f"--server-id={server_id}")
 
-            elif self.server_ip != '':
+            elif self.source_ip != '':
                 flags.append(f"--ip={self.source_ip}")
 
             else:
