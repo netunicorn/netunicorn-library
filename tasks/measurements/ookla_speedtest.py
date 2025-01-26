@@ -68,6 +68,7 @@ class OoklaSpeedtestLinuxImplementation(Task):
                 
                 else:
                     flags.append(f"--server-id={server_id}")
+                    return Success(server_id.unwrap())
 
             elif self.source_ip != '':
                 flags.append(f"--ip={self.source_ip}")
