@@ -1,19 +1,14 @@
 from netunicorn.base import Pipeline
-from netunicorn.library.tasks.capture.tcpdump import StartCapture, StopNamedCapture
-from netunicorn.library.tasks.measurements.ookla_speedtest import SpeedTest
-from netunicorn.library.tasks.upload.fileio import UploadToFileIO
-
+from netunicorn.library.tasks.measurements.ookla_speedtest import OoklaSpeedtest, OoklaSpeedtestAnalysis
 
 def simple_speedtest_pipeline() -> Pipeline:
     """
-    Run a speedtest while capturing the traffic with tcpdump and upload the capture file to file.io
+    Run a speedtest using ookla CLI and then providing user-friendly analysis of the results
     :return: pipeline to run
     """
     pipeline = (
         Pipeline()
-        .then(StartCapture(filepath="/tmp/capture.pcap", name="capture"))
-        .then(SpeedTest())
-        .then(StopNamedCapture(start_capture_task_name="capture"))
-        .then(UploadToFileIO(filepath="/tmp/capture.pcap", expires="1d"))
+        .then(OoklaSpeedtest(name="Ookla CLI Speedtest"))
+        .then(OoklaSpeedtestAnalysis(name="Ookla Speedtest Analysis"))
     )
     return pipeline
