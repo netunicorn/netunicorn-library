@@ -139,6 +139,11 @@ class ServerSelectionLinuxImplementation(Task):
             )
 
 class OoklaSpeedtestAnalysis(TaskDispatcher):
+    """
+    This task analyzes the results of an Ookla Speedtest by inspecting the latency,
+    jitter, and download/upload throughput. It then provides a simple classification
+    (e.g. 'good', 'ok', 'strange', 'problem') for latency and throughput results.
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.linux_implementation = OoklaSpeedtestAnalysisLinuxImplementation(
@@ -153,13 +158,6 @@ class OoklaSpeedtestAnalysis(TaskDispatcher):
         )
 
 class OoklaSpeedtestAnalysisLinuxImplementation(Task):
-    """
-    Linux-specific implementation of a Speedtest analysis.
-
-    This class analyzes the results of an Ookla Speedtest by inspecting the latency,
-    jitter, and download/upload throughput. It then provides a simple classification
-    (e.g. 'good', 'ok', 'strange', 'problem') for latency and throughput results.
-    """
     requirements = UNIX_REQUIREMENTS
 
     def __init__(self, *args, **kwargs):
