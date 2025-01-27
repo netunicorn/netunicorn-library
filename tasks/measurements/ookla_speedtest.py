@@ -144,9 +144,10 @@ class OoklaSpeedtestAnalysis(TaskDispatcher):
     jitter, and download/upload throughput. It then provides a simple classification
     (e.g. 'good', 'ok', 'strange', 'problem') for latency and throughput results.
     """
-    def __init__(self, *args, **kwargs):
+    def __init__(self, speedtest_task_name: str, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.linux_implementation = OoklaSpeedtestAnalysisLinuxImplementation(
+            speedtest_task_name,
             name=self.name
         )
         
@@ -160,7 +161,8 @@ class OoklaSpeedtestAnalysis(TaskDispatcher):
 class OoklaSpeedtestAnalysisLinuxImplementation(Task):
     requirements = UNIX_REQUIREMENTS
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, speedtest_task_name: str, *args, **kwargs):
+        self.speedtest_task_name = speedtest_task_name
         super().__init__(*args, **kwargs)
 
     def classify_latency(self, latency_value: float) -> str:
@@ -186,17 +188,18 @@ class OoklaSpeedtestAnalysisLinuxImplementation(Task):
 
     def run(self):
         try:
-            executions = self.previous_steps.get("Ookla CLI Speedtest", Failure("Ookla CLI Speedtest Task has not been executed"))
-            if isinstance(executions, Failure):
-                return Failure("Speedtest Analysis could not execute due to lack of data.")
+            raw_speedtest_results = self.previous_steps.get(self.speedtest_task_name, Failure("Ookla CLI Speedtest Task has not been executed"))
 
-            results = [execution.unwrap() for execution in executions]
+            if isinstance(raw_speedtest_results, Failure):
+                return raw_speedtest_results
+
+            speedtest_results = [result.unwrap() for result in raw_speedtest_results]
             ping_latencies: List[float] = []
             ping_jitters: List[float] = []
             download_bandwidths: List[float] = []
             upload_bandwidths: List[float] = []
 
-            for speedtest_data_dict in results:
+            for speedtest_data_dict in speedtest_results:
                 ping_info = speedtest_data_dict.get("ping", {})
                 if "latency" in ping_info:
                     ping_latencies.append(float(ping_info["latency"]))
