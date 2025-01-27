@@ -1,8 +1,8 @@
 import subprocess
 import json
-from typing import Callable, Optional
+from typing import Callable, Optional, List
 
-from netunicorn.base import Architecture, Failure, Success, Task, TaskDispatcher, Node # type: ignore
+from netunicorn.base import Architecture, Failure, Success, Task, TaskDispatcher, Node 
 from subprocess import CalledProcessError
 from dataclasses import dataclass
 
@@ -137,3 +137,102 @@ class ServerSelectionLinuxImplementation(Task):
                 f"\nStdout: {result.stdout.strip()} "
                 f"\nStderr: {result.stderr.strip()}"
             )
+
+class OoklaSpeedtestAnalysis(TaskDispatcher):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.linux_implementation = OoklaSpeedtestAnalysisLinuxImplementation(
+            name=self.name
+        )
+        
+    def dispatch(self, node: Node) -> Task:
+        if node.architecture in {Architecture.LINUX_AMD64, Architecture.LINUX_ARM64}:
+            return self.linux_implementation
+        raise NotImplementedError(
+            f"Ookla_Speedtest_CLI is not implemented for architecture: {node.architecture}"
+        )
+
+class OoklaSpeedtestAnalysisLinuxImplementation(Task):
+    """
+    Linux-specific implementation of a Speedtest analysis.
+
+    This class analyzes the results of an Ookla Speedtest by inspecting the latency,
+    jitter, and download/upload throughput. It then provides a simple classification
+    (e.g. 'good', 'ok', 'strange', 'problem') for latency and throughput results.
+    """
+    requirements = UNIX_REQUIREMENTS
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def classify_latency(self, latency_value: float) -> str:
+        if latency_value < 10:
+            return "good"
+        elif latency_value < 30:
+            return "ok"
+        elif latency_value < 100:
+            return "strange"
+        else:
+            return "problem"
+
+    def classify_throughput(self, bandwidth_bps: float) -> str:
+        mbps = bandwidth_bps / 1_000_000
+        if mbps < 10:
+            return "low"
+        elif mbps < 50:
+            return "ok"
+        elif mbps < 150:
+            return "good"
+        else:
+            return "excellent"
+
+    def run(self):
+        try:
+            executions = self.previous_steps.get("Ookla CLI Speedtest", Failure("Ookla CLI Speedtest Task has not been executed"))
+            if isinstance(executions, Failure):
+                return Failure("Speedtest Analysis could not execute due to lack of data.")
+
+            results = [execution.unwrap() for execution in executions]
+            ping_latencies: List[float] = []
+            ping_jitters: List[float] = []
+            download_bandwidths: List[float] = []
+            upload_bandwidths: List[float] = []
+
+            for speedtest_data_dict in results:
+                ping_info = speedtest_data_dict.get("ping", {})
+                if "latency" in ping_info:
+                    ping_latencies.append(float(ping_info["latency"]))
+                if "jitter" in ping_info:
+                    ping_jitters.append(float(ping_info["jitter"]))
+                download_info = speedtest_data_dict.get("download", {})
+                if "bandwidth" in download_info:
+                    download_bandwidths.append(float(download_info["bandwidth"]))
+                upload_info = speedtest_data_dict.get("upload", {})
+                if "bandwidth" in upload_info:
+                    upload_bandwidths.append(float(upload_info["bandwidth"]))
+ 
+            def average(values: List[float]) -> float:
+                return sum(values) / len(values) if values else 0.0
+
+            avg_latency = average(ping_latencies)
+            avg_jitter = average(ping_jitters)
+            avg_download_bps = average(download_bandwidths)
+            avg_upload_bps = average(upload_bandwidths)
+
+            latency_class = self.classify_latency(avg_latency) if avg_latency > 0 else "Unknown"
+            download_class = self.classify_throughput(avg_download_bps) if avg_download_bps > 0 else "Unknown"
+            upload_class = self.classify_throughput(avg_upload_bps) if avg_upload_bps > 0 else "Unknown"
+
+            summary = {
+                "average_ping_latency_ms": avg_latency,
+                "ping_latency_class": latency_class,
+                "average_ping_jitter_ms": avg_jitter,
+                "average_download_bandwidth_bps": avg_download_bps,
+                "download_bandwidth_class": download_class,
+                "average_upload_bandwidth_bps": avg_upload_bps,
+                "upload_bandwidth_class": upload_class,
+            }
+            return Success(summary)
+
+        except Exception as e:
+            return Failure(f"Exception occurred: {str(e)}")
