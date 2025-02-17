@@ -2,7 +2,7 @@ import requests
 from netunicorn.base import Failure, Success, Task
 
 
-class SendToRAG(Task):
+class SendToAPIEndpoint(Task):
     """
     Sends a netunicorn execution result(s) to any api endpoint
     """
@@ -20,8 +20,8 @@ class SendToRAG(Task):
             data = {"task": self.task_name, "result": task_results}
             response = requests.post(self.url, json=data)
             if response.status_code == 200:
-                return Success(f"Data from {self.task_name} task transferred to RAG for Analysis :)")
+                return Success(f"API endpoint at {self.url} recieved {self.task_name} task results")
             else:
-                return Failure(f"Failed to transfer data: {response.status_code} {response.text}")
+                return Failure(f"Failed to post data: {response.status_code} {response.text}")
         except Exception as e:
             return Failure(f"Exception occurred: {str(e)}")
