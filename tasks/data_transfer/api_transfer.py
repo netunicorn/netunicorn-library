@@ -17,7 +17,7 @@ class SendData(Task):
         self, 
         tasks_info: list[TaskInfo], 
         endpoint: str, 
-        allow_failure = False, 
+        allow_failure = True, 
         *args, 
         **kwargs
         ):
