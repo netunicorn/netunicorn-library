@@ -9,6 +9,6 @@ def simple_speedtest_pipeline() -> Pipeline:
     pipeline = (
         Pipeline()
         .then(OoklaSpeedtest(name="Ookla CLI Speedtest"))
-        .then(OoklaSpeedtestAnalysis(name="Ookla Speedtest Analysis"))
+        .then(OoklaSpeedtestAnalysis(name="Ookla Speedtest Analysis", speedtest_task_name="Ookla CLI Speedtest"))
     )
     return pipeline
