@@ -22,7 +22,7 @@ class _NDTSpeedTestImplementation(Task):
         *args,
         **kwargs,
     ):
-        self.flags = flags or ["-format", "json"]
+        self.flags = flags or ["-format", "human"]
         if source_ip:
             self.flags += ["-source", f"{source_ip}"]
         if service_url:
