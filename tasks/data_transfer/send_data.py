@@ -74,10 +74,7 @@ class SendData(Task):
 	       {
                    "client_location": location_str,
                    "measurement_type": self.task_descriptors[0].datatype,
-                   "measurement_data": {
-                       "execution_id": str(uuid.uuid1()),
-                       "execution_results": execution_results
-                   }
+                   "measurement_data": execution_results
                })
 
             if response.status_code == 200:
