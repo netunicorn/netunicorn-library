@@ -1,5 +1,6 @@
 from netunicorn.base import Pipeline
 from netunicorn.library.tasks.measurements.ookla_speedtest import OoklaSpeedtest
+from netunicorn.library.tasks.measurements.ndt import NDT7SpeedTest
 from netunicorn.library.tasks.data_transfer.send_data import SendData
 from netunicorn.library.tasks.data_transfer.fetch_data import FetchData
 import os 

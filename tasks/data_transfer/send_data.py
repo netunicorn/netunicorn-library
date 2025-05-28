@@ -70,7 +70,12 @@ class SendData(Task):
             
             (location_str, *_) = self.get_geolocation_from_ip("8.8.8.8")
 
-            response = requests.post(self.endpoint, json={"data": {"execution_id":str(uuid.uuid1()), "execution_results": execution_results}, "location": location_str})
+            response = requests.post(self.endpoint, json=
+	       {
+                   "client_location": location_str,
+                   "measurement_type": self.task_descriptors[0].datatype,
+                   "measurement_data": execution_results
+               })
 
             if response.status_code == 200:
                 return Success(response.json())

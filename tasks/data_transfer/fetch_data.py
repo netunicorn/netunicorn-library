@@ -24,12 +24,12 @@ class FetchData(Task):
             content_id = None
             for exec in send_data_exec:
                 if not isinstance(exec, Failure):
-                    content_id = exec.unwrap()["id"]
+                    content_id = exec.unwrap()["result_id"]
                     break
             if content_id is None:
                 return Failure(f"Failed to obtain id from {self.send_data_task}")
             
-            response = requests.get(self.endpoint, params = {'id' : content_id})
+            response = requests.get(self.endpoint, params = {'result_id' : content_id})
             if response.status_code == 200:
                 return Success(f"RAG result: {response.json()}")
             else:
