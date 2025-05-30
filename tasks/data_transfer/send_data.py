@@ -61,20 +61,26 @@ class SendData(Task):
                 if isinstance(raw_task_result, Failure):
                     continue
 
-                task_results = [result.unwrap() for result in raw_task_result]
+                raw_results = [result.unwrap() for result in raw_task_result]
                 
                 if task_descriptor.handler:
-                    task_results = task_descriptor.handler(task_descriptor)
-                
-                execution_results.append({"task_type": task_descriptor.datatype, "task_results": task_results})
+		    task_results = task_descriptor.handler(task_descriptor.datatype, raw_results)
+		else: # no handler
+		    task_results = {
+			"task_type": task_descriptor.datatype,
+			"task_results": raw_results
+		    }
+		execution_results.append(task_results)
             
             (location_str, *_) = self.get_geolocation_from_ip("8.8.8.8")
+
+            measurement_data = {"execution_results": execution_results}
 
             response = requests.post(self.endpoint, json=
 	       {
                    "client_location": location_str,
                    "measurement_type": self.task_descriptors[0].datatype,
-                   "measurement_data": execution_results
+                   "measurement_data": measurement_data
                })
 
             if response.status_code == 200:
