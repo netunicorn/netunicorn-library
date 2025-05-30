@@ -1,4 +1,2 @@
-from typing import List, Dict
-
-def mlab_handler(results: List[Dict]) -> Dict:
-    return {"data": results}
+def mlab_handler(task_type: str, results: list[dict]) -> dict:
+    return {"task_type": task_type, "task_results": {"data": results}}
