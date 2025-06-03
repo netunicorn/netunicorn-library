@@ -1,2 +1,6 @@
 .idea
 *.log
+
+.ipynb
+.env
+__pycache__
